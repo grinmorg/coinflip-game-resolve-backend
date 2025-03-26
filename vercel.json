@@ -6,14 +6,17 @@
 			"use": "@vercel/node"
 		},
 		{
-			"src": "public/docs/**",
+			"src": "public/swagger/**",
 			"use": "@vercel/static"
 		}
 	],
 	"routes": [
 		{
 			"src": "/docs/(.*)",
-			"dest": "/public/docs/$1"
+			"dest": "/public/swagger/$1",
+			"headers": {
+				"Cache-Control": "public, max-age=31536000, immutable"
+			}
 		},
 		{
 			"src": "/(.*)",
