@@ -3,28 +3,21 @@
 	"builds": [
 		{
 			"src": "src/main.ts",
-			"use": "@vercel/node",
-			"config": {
-				"includeFiles": ["dist/**"]
-			}
+			"use": "@vercel/node"
+		},
+		{
+			"src": "public/docs/**",
+			"use": "@vercel/static"
 		}
 	],
-	"rewrites": [
+	"routes": [
 		{
-			"source": "/docs",
-			"destination": "/docs/index.html"
+			"src": "/docs/(.*)",
+			"dest": "/public/docs/$1"
 		},
 		{
-			"source": "/docs/(.*)",
-			"destination": "/docs/$1"
-		},
-		{
-			"source": "/api/(.*)",
-			"destination": "src/main.ts"
-		},
-		{
-			"source": "/(.*)",
-			"destination": "src/main.ts"
+			"src": "/(.*)",
+			"dest": "src/main.ts"
 		}
 	]
 }
