@@ -2,25 +2,22 @@
 	"version": 2,
 	"builds": [
 		{
-			"src": "src/main.ts",
+			"src": "dist/main.js",
 			"use": "@vercel/node"
 		},
 		{
-			"src": "public/swagger/**",
+			"src": "dist/public/swagger/**",
 			"use": "@vercel/static"
 		}
 	],
 	"routes": [
 		{
 			"src": "/docs/(.*)",
-			"dest": "/public/swagger/$1",
-			"headers": {
-				"Cache-Control": "public, max-age=31536000, immutable"
-			}
+			"dest": "/dist/public/swagger/$1"
 		},
 		{
 			"src": "/(.*)",
-			"dest": "src/main.ts"
+			"dest": "/dist/main.js"
 		}
 	]
 }
