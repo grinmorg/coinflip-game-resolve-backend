@@ -1,16 +1,28 @@
 // src/signer/signer.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { Account, Chain, createPublicClient, Hash, Hex, http } from 'viem'
+import {
+	Account,
+	Chain,
+	createPublicClient,
+	createWalletClient,
+	Hash,
+	Hex,
+	http
+} from 'viem'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { arbitrum, sepolia } from 'viem/chains'
+
+import { CoinFlipABI } from '@/src/shared/constants/abi-coinflip'
+import { CONTRACT_COIN_FLIP_ADDRESS } from '@/src/shared/constants/contracts'
 
 @Injectable()
 export class SignerService implements OnModuleInit {
 	private readonly logger = new Logger(SignerService.name)
 	private account: Account
 	public signerAddress: Hex
-	private publicClient: any
+	public publicClient: any
+	public walletClient: any
 	private currentChain: Chain
 
 	constructor(private configService: ConfigService) {}
@@ -28,6 +40,12 @@ export class SignerService implements OnModuleInit {
 		this.publicClient = createPublicClient({
 			chain: this.currentChain,
 			transport: http()
+		})
+
+		this.walletClient = createWalletClient({
+			chain: this.currentChain,
+			transport: http(),
+			account: this.account
 		})
 
 		// Инициализация аккаунта
@@ -80,5 +98,23 @@ export class SignerService implements OnModuleInit {
 			primaryType: 'GameResult',
 			types
 		})
+	}
+
+	// Отправка в блокчейн
+	async resolveOnChain(
+		gameId: number,
+		result: number,
+		signature: Hash
+	): Promise<Hash> {
+		const { request } = await this.publicClient.simulateContract({
+			address: CONTRACT_COIN_FLIP_ADDRESS,
+			abi: CoinFlipABI,
+			functionName: 'resolveGame',
+			args: [gameId, result, signature],
+			account: this.account
+		})
+
+		const txHash = await this.walletClient.writeContract(request)
+		return txHash
 	}
 }
