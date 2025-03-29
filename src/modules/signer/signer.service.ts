@@ -1,16 +1,7 @@
 // src/signer/signer.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import {
-	Account,
-	Chain,
-	createPublicClient,
-	encodeAbiParameters,
-	Hash,
-	Hex,
-	http,
-	toHex
-} from 'viem'
+import { Account, Chain, createPublicClient, Hash, Hex, http } from 'viem'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import { arbitrum, sepolia } from 'viem/chains'
 
@@ -67,16 +58,27 @@ export class SignerService implements OnModuleInit {
 	}
 
 	async signGameResult(gameId: number, result: number): Promise<Hash> {
-		const message = encodeAbiParameters(
-			[
+		const domain = {
+			chainId: this.currentChain.id // Минимальная защита от межсетевых replay-атак
+		}
+
+		const types = {
+			GameResult: [
 				{ name: 'gameId', type: 'uint256' },
 				{ name: 'result', type: 'uint256' }
-			],
-			[BigInt(gameId), BigInt(result)]
-		)
+			]
+		}
 
-		return this.account.signMessage({
-			message: { raw: toHex(message) }
+		const value = {
+			gameId: BigInt(gameId),
+			result: BigInt(result)
+		}
+
+		return await this.account.signTypedData({
+			domain,
+			message: value,
+			primaryType: 'GameResult',
+			types
 		})
 	}
 }
